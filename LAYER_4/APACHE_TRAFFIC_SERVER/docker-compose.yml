@@ -1,4 +1,3 @@
-version: "3.9"
 
 services:
   app1:
@@ -43,7 +42,7 @@ services:
       - lbnet
 
   ats-lb:
-    image: apache/trafficserver:9.2.4
+    image: trafficserver/trafficserver:10.0.5
     container_name: ats-lb
     depends_on:
       - app1
@@ -54,10 +53,10 @@ services:
       - "8088:8080"
       - "8081:8081"
     volumes:
-      - ./ats/records.config:/usr/local/etc/trafficserver/records.config:ro
-      - ./ats/remap.config:/usr/local/etc/trafficserver/remap.config:ro
-      - ./ats/parent.config:/usr/local/etc/trafficserver/parent.config:ro
-      - ./ats/plugin.config:/usr/local/etc/trafficserver/plugin.config:ro
+      - ./ats/records.yaml:/opt/etc/trafficserver/records.yaml:ro
+      - ./ats/remap.config:/opt/etc/trafficserver/remap.config:ro
+      - ./ats/parent.config:/opt/etc/trafficserver/parent.config:ro
+      - ./ats/plugin.config:/opt/etc/trafficserver/plugin.config:ro
     networks:
       - lbnet
 
