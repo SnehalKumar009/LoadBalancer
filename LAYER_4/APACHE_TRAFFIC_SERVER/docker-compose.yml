@@ -42,7 +42,7 @@ services:
       - lbnet
 
   ats-lb:
-    image: trafficserver/trafficserver:10.0.5
+    image: trafficserver/trafficserver:10.1.2
     container_name: ats-lb
     depends_on:
       - app1
