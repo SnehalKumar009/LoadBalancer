@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: "LB PoC"
+    orgId: 1
+    folder: "LB PoC"
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    options:
+      path: /var/lib/grafana/dashboards
+

@@ -1,0 +1,134 @@
+version: "3.9"
+
+services:
+  app1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ats-l4-poc-app:local
+    container_name: app1
+    environment:
+      APP_ID: app1
+    networks:
+      - lbnet
+
+  app2:
+    image: ats-l4-poc-app:local
+    container_name: app2
+    environment:
+      APP_ID: app2
+    depends_on:
+      - app1
+    networks:
+      - lbnet
+
+  app3:
+    image: ats-l4-poc-app:local
+    container_name: app3
+    environment:
+      APP_ID: app3
+    depends_on:
+      - app1
+    networks:
+      - lbnet
+
+  app4:
+    image: ats-l4-poc-app:local
+    container_name: app4
+    environment:
+      APP_ID: app4
+    depends_on:
+      - app1
+    networks:
+      - lbnet
+
+  ats-lb:
+    image: apache/trafficserver:9.2.4
+    container_name: ats-lb
+    depends_on:
+      - app1
+      - app2
+      - app3
+      - app4
+    ports:
+      - "8088:8080"
+      - "8081:8081"
+    volumes:
+      - ./ats/records.config:/usr/local/etc/trafficserver/records.config:ro
+      - ./ats/remap.config:/usr/local/etc/trafficserver/remap.config:ro
+      - ./ats/parent.config:/usr/local/etc/trafficserver/parent.config:ro
+      - ./ats/plugin.config:/usr/local/etc/trafficserver/plugin.config:ro
+    networks:
+      - lbnet
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    privileged: true
+    ports:
+      - "8089:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - lbnet
+
+  prometheus:
+    image: prom/prometheus:v2.53.1
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - cadvisor
+      - app1
+      - app2
+      - app3
+      - app4
+    networks:
+      - lbnet
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - lbnet
+
+  traffic:
+    image: grafana/k6:0.52.0
+    container_name: traffic
+    working_dir: /scripts
+    volumes:
+      - ./k6:/scripts:ro
+    entrypoint: ["sleep", "infinity"]
+    networks:
+      - lbnet
+
+  netshoot:
+    image: nicolaka/netshoot:latest
+    container_name: netshoot
+    command: ["sleep", "infinity"]
+    networks:
+      - lbnet
+
+networks:
+  lbnet:
+    driver: bridge
+
