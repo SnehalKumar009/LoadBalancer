@@ -5,12 +5,16 @@ records:
   diags:
     debug:
       enabled: 1
-      tags: http|dns|hostdb|parent_select
+      tags: http|dns|hostdb
   http:
-    server_ports: '8080'
-    parent_proxy_routing_enable: 1
+    # 8080 = proxy/LB traffic, 8081 = stats_over_http (/_stats) endpoint.
+    server_ports: '8080 8081'
     cache:
       http: 0
+  hostdb:
+    # Rotate evenly across all A-records returned for "backend" (app1..app4)
+    # so each request lands on the next backend -> L7 load balancing.
+    strict_round_robin: 1
   reverse_proxy:
     enabled: 1
   url_remap:

@@ -9,7 +9,9 @@ services:
     environment:
       APP_ID: app1
     networks:
-      - lbnet
+      lbnet:
+        aliases:
+          - backend
 
   app2:
     image: ats-l4-poc-app:local
@@ -19,7 +21,9 @@ services:
     depends_on:
       - app1
     networks:
-      - lbnet
+      lbnet:
+        aliases:
+          - backend
 
   app3:
     image: ats-l4-poc-app:local
@@ -29,7 +33,9 @@ services:
     depends_on:
       - app1
     networks:
-      - lbnet
+      lbnet:
+        aliases:
+          - backend
 
   app4:
     image: ats-l4-poc-app:local
@@ -39,7 +45,9 @@ services:
     depends_on:
       - app1
     networks:
-      - lbnet
+      lbnet:
+        aliases:
+          - backend
 
   ats-lb:
     image: trafficserver/trafficserver:10.1.2
@@ -114,6 +122,9 @@ services:
     image: grafana/k6:0.52.0
     container_name: traffic
     working_dir: /scripts
+    environment:
+      NO_PROXY: ats-lb,app1,app2,app3,app4,backend,localhost,127.0.0.1
+      no_proxy: ats-lb,app1,app2,app3,app4,backend,localhost,127.0.0.1
     volumes:
       - ./k6:/scripts:ro
     entrypoint: ["sleep", "infinity"]
