@@ -15,23 +15,11 @@ scrape_configs:
     static_configs:
       - targets: ["cadvisor:8080"]
 
-  # ATS metrics via json-exporter sidecar (probe-style scrape).
-  # Prometheus passes the ATS /_stats URL as ?target=...; json-exporter
-  # fetches it, converts to Prometheus format, and returns the result.
+  # ATS metrics via the in-house exporter sidecar (Python script that
+  # translates ATS /_stats JSON -> Prometheus exposition text).
   - job_name: ats
-    metrics_path: /probe
-    params:
-      module: [ats]
     static_configs:
-      - targets:
-          - 'http://ats-lb:8081/_stats'
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: __param_target
-      - source_labels: [__param_target]
-        target_label: instance
-      - target_label: __address__
-        replacement: ats-exporter:7979
+      - targets: ["ats-exporter:9100"]
 
   # Uncomment when running the NGINX load balancer (nginx-exporter sidecar
   # translates nginx stub_status -> Prometheus metrics on port 9113).

@@ -75,7 +75,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "rate(ats_http_completed_requests[1m])",
+          "expr": "rate(ats_proxy_process_http_completed_requests[1m])",
           "legendFormat": "completed",
           "refId": "A"
         }
@@ -90,12 +90,12 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "ats_http_current_client_connections",
+          "expr": "ats_proxy_process_http_current_client_connections",
           "legendFormat": "current (open)",
           "refId": "A"
         },
         {
-          "expr": "rate(ats_http_total_client_connections[1m])",
+          "expr": "rate(ats_proxy_process_http_total_client_connections[1m])",
           "legendFormat": "new / sec",
           "refId": "B"
         }
@@ -115,9 +115,9 @@
       "title": "ATS: Responses by Status (req/s)",
       "type": "timeseries",
       "targets": [
-        {"expr": "rate(ats_http_2xx_responses[1m])", "legendFormat": "2xx", "refId": "A"},
-        {"expr": "rate(ats_http_4xx_responses[1m])", "legendFormat": "4xx", "refId": "B"},
-        {"expr": "rate(ats_http_5xx_responses[1m])", "legendFormat": "5xx", "refId": "C"}
+        {"expr": "rate(ats_proxy_process_http_2xx_responses[1m])", "legendFormat": "2xx", "refId": "A"},
+        {"expr": "rate(ats_proxy_process_http_4xx_responses[1m])", "legendFormat": "4xx", "refId": "B"},
+        {"expr": "rate(ats_proxy_process_http_5xx_responses[1m])", "legendFormat": "5xx", "refId": "C"}
       ]
     },
     {
@@ -129,7 +129,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "rate(ats_http_origin_server_response_document_total_size[1m])",
+          "expr": "rate(ats_proxy_process_http_origin_server_response_document_total_size[1m])",
           "legendFormat": "origin bytes",
           "refId": "A"
         }
