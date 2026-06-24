@@ -45,7 +45,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{name=~'app1|app2|app3|app4|ats-lb|nginx-lb'}[1m]))",
+          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{name=~\"app1|app2|app3|app4|ats-lb|nginx-lb\"}[1m]))",
           "legendFormat": "{{name}}",
           "refId": "A"
         }
@@ -60,7 +60,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum by (name) (container_memory_working_set_bytes{name=~'app1|app2|app3|app4|ats-lb|nginx-lb'}) / 1024 / 1024",
+          "expr": "sum by (name) (container_memory_working_set_bytes{name=~\"app1|app2|app3|app4|ats-lb|nginx-lb\"}) / 1024 / 1024",
           "legendFormat": "{{name}}",
           "refId": "A"
         }

@@ -121,6 +121,14 @@ services:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
     container_name: cadvisor
     privileged: true
+    # --docker_only restricts cAdvisor to Docker-managed cgroups so every
+    # metric carries the `name`, `image`, and `container_label_*` labels
+    # (without this, on cgroup-v2 hosts we only get raw `id=/system.slice/...`
+    # series with no container name -> Grafana panels show "No Data").
+    command:
+      - "--docker_only=true"
+      - "--store_container_labels=false"
+      - "--housekeeping_interval=5s"
     ports:
       - "8089:8080"
     volumes:
@@ -128,6 +136,8 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /dev/disk/:/dev/disk:ro
     networks:
       - lbnet
 
