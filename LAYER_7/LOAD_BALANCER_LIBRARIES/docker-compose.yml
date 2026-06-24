@@ -118,17 +118,24 @@ services:
   #     - lbnet
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
     container_name: cadvisor
     privileged: true
     # --docker_only restricts cAdvisor to Docker-managed cgroups so every
     # metric carries the `name`, `image`, and `container_label_*` labels
     # (without this, on cgroup-v2 hosts we only get raw `id=/system.slice/...`
     # series with no container name -> Grafana panels show "No Data").
+    #
+    # --disable_metrics=disk,diskIO  ->  skip the read-write layer ID lookup,
+    # which fails on Docker setups that use the containerd image snapshotter
+    # (the new default on recent kernels). When that lookup fails, cAdvisor
+    # refuses to register the container at all, again breaking the `name`
+    # label. Disabling disk stats lets it proceed.
     command:
       - "--docker_only=true"
       - "--store_container_labels=false"
       - "--housekeeping_interval=5s"
+      - "--disable_metrics=disk,diskIO"
     ports:
       - "8089:8080"
     volumes:
