@@ -117,34 +117,21 @@ services:
   #   networks:
   #     - lbnet
 
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.52.1
-    container_name: cadvisor
-    privileged: true
-    # --docker_only restricts cAdvisor to Docker-managed cgroups so every
-    # metric carries the `name`, `image`, and `container_label_*` labels
-    # (without this, on cgroup-v2 hosts we only get raw `id=/system.slice/...`
-    # series with no container name -> Grafana panels show "No Data").
-    #
-    # --disable_metrics=disk,diskIO  ->  skip the read-write layer ID lookup,
-    # which fails on Docker setups that use the containerd image snapshotter
-    # (the new default on recent kernels). When that lookup fails, cAdvisor
-    # refuses to register the container at all, again breaking the `name`
-    # label. Disabling disk stats lets it proceed.
-    command:
-      - "--docker_only=true"
-      - "--store_container_labels=false"
-      - "--housekeeping_interval=5s"
-      - "--disable_metrics=disk,diskIO"
-    ports:
-      - "8089:8080"
+  # Per-container CPU + memory metrics via a tiny Python sidecar that talks
+  # to the Docker socket directly.
+  #
+  # Why not cAdvisor? cAdvisor (through v0.52.x) hard-fails container init
+  # when Docker uses the containerd image snapshotter (the new default on
+  # recent kernels) -> no `name` label -> Grafana panels show "No Data".
+  # This 100-line script bypasses the problem entirely and emits the exact
+  # metric names the dashboard already queries.
+  docker-stats-exporter:
+    image: python:3.12-alpine
+    container_name: docker-stats-exporter
+    command: ["python", "/app/exporter.py"]
     volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
+      - ./docker-stats-exporter/exporter.py:/app/exporter.py:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /dev/disk/:/dev/disk:ro
     networks:
       - lbnet
 
@@ -159,7 +146,7 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     depends_on:
-      - cadvisor
+      - docker-stats-exporter
       - app1
       - app2
       - app3

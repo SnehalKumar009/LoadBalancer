@@ -11,9 +11,14 @@ scrape_configs:
     static_configs:
       - targets: ["app1:8080", "app2:8080", "app3:8080", "app4:8080"]
 
-  - job_name: cadvisor
+  # Per-container CPU + memory via the in-house docker-stats-exporter
+  # (Python sidecar that talks to /var/run/docker.sock and emits the same
+  # `container_cpu_usage_seconds_total` / `container_memory_working_set_bytes`
+  # metrics that cAdvisor would, but works on hosts using the containerd
+  # image snapshotter where cAdvisor breaks).
+  - job_name: docker-stats
     static_configs:
-      - targets: ["cadvisor:8080"]
+      - targets: ["docker-stats-exporter:9100"]
 
   # ATS metrics via the in-house exporter sidecar (Python script that
   # translates ATS /_stats JSON -> Prometheus exposition text).
