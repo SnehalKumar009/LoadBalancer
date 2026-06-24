@@ -38,15 +38,99 @@
     },
     {
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "fieldConfig": {"defaults": {}, "overrides": []},
+      "fieldConfig": {"defaults": {"unit": "none"}, "overrides": []},
       "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
       "id": 3,
       "title": "Container CPU (cores)",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{name=~'app1|app2|app3|app4|ats-lb'}[1m]))",
+          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{name=~'app1|app2|app3|app4|ats-lb|nginx-lb'}[1m]))",
           "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "decmbytes"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+      "id": 4,
+      "title": "Container Memory (MiB)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum by (name) (container_memory_working_set_bytes{name=~'app1|app2|app3|app4|ats-lb|nginx-lb'}) / 1024 / 1024",
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+      "id": 5,
+      "title": "ATS: Completed Requests (req/s)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(ats_http_completed_requests[1m])",
+          "legendFormat": "completed",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+      "id": 6,
+      "title": "ATS: Client Connections",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "ats_http_current_client_connections",
+          "legendFormat": "current (open)",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(ats_http_total_client_connections[1m])",
+          "legendFormat": "new / sec",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {"stacking": {"mode": "normal"}}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32},
+      "id": 7,
+      "title": "ATS: Responses by Status (req/s)",
+      "type": "timeseries",
+      "targets": [
+        {"expr": "rate(ats_http_2xx_responses[1m])", "legendFormat": "2xx", "refId": "A"},
+        {"expr": "rate(ats_http_4xx_responses[1m])", "legendFormat": "4xx", "refId": "B"},
+        {"expr": "rate(ats_http_5xx_responses[1m])", "legendFormat": "5xx", "refId": "C"}
+      ]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "Bps"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
+      "id": 8,
+      "title": "ATS: Bytes from Origin (B/s)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(ats_http_origin_server_request_document_total_size[1m])",
+          "legendFormat": "origin bytes",
           "refId": "A"
         }
       ]
@@ -55,12 +139,13 @@
   "refresh": "5s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["ats", "load-balancer", "poc"],
+  "tags": ["load-balancer", "ats", "nginx", "poc"],
   "templating": {"list": []},
   "time": {"from": "now-15m", "to": "now"},
   "timepicker": {},
   "timezone": "",
-  "title": "ATS LB PoC Overview",
-  "version": 1
+  "title": "Load Balancer PoC Overview",
+  "version": 2
 }
+
 
