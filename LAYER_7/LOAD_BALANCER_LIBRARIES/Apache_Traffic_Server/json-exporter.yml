@@ -1,0 +1,54 @@
+# json-exporter config — translates ATS `/_stats` (JSON) into Prometheus metrics.
+# Loaded by the `ats-exporter` sidecar in docker-compose.yml.
+#
+# ATS /_stats returns:
+#   {
+#     "global": {
+#       "proxy.process.http.completed_requests": "12345",
+#       "proxy.process.http.2xx_responses":      "12000",
+#       ...
+#     }
+#   }
+#
+# The dots inside the keys are escaped (\.) so json-exporter's gjson path parser
+# treats them as literal characters instead of nested object separators.
+#
+# Only a small useful subset is exposed below — extend as needed.
+
+modules:
+  ats:
+    metrics:
+      - name: ats_http_completed_requests
+        type: counter
+        help: 'ATS: completed HTTP requests'
+        path: '{.global.proxy\.process\.http\.completed_requests}'
+
+      - name: ats_http_current_client_connections
+        type: gauge
+        help: 'ATS: currently open client connections'
+        path: '{.global.proxy\.process\.http\.current_client_connections}'
+
+      - name: ats_http_total_client_connections
+        type: counter
+        help: 'ATS: total client connections accepted'
+        path: '{.global.proxy\.process\.http\.total_client_connections}'
+
+      - name: ats_http_2xx_responses
+        type: counter
+        help: 'ATS: 2xx responses sent to clients'
+        path: '{.global.proxy\.process\.http\.2xx_responses}'
+
+      - name: ats_http_4xx_responses
+        type: counter
+        help: 'ATS: 4xx responses sent to clients'
+        path: '{.global.proxy\.process\.http\.4xx_responses}'
+
+      - name: ats_http_5xx_responses
+        type: counter
+        help: 'ATS: 5xx responses sent to clients'
+        path: '{.global.proxy\.process\.http\.5xx_responses}'
+
+      - name: ats_http_origin_server_request_document_total_size
+        type: counter
+        help: 'ATS: bytes received from origin servers'
+        path: '{.global.proxy\.process\.http\.origin_server_response_document_total_size}'

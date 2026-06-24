@@ -1,9 +1,11 @@
-# Apache Traffic Server Load Balancer PoC (Spring Boot + Maven + Docker)
+# Load Balancer PoC (Spring Boot + Maven + Docker)
 
 This PoC runs:
 
 - 4 Spring Boot backend app containers (`app1`..`app4`)
-- Apache Traffic Server (`ats-lb`) as load balancer entrypoint
+- A pluggable load balancer entrypoint — **Apache Traffic Server** by default,
+  **NGINX** as a drop-in alternative (see *Swapping load balancers* below)
+- `ats-exporter` sidecar that translates ATS `/_stats` JSON into Prometheus metrics
 - k6 load generator container (`traffic`)
 - Prometheus + Grafana for monitoring
 - cAdvisor for container-level metrics
@@ -11,7 +13,10 @@ This PoC runs:
 
 ## Architecture
 
-Client / k6 -> ATS (`localhost:8088`) -> `app1|app2|app3|app4` (port 8080)
+Client / k6 -> LB (`localhost:8088`) -> `app1|app2|app3|app4` (port 8080)
+
+The active LB container exposes itself on the Docker network alias **`lb`**, so
+all k6 scripts target `http://lb:8080/` and work unchanged across LBs.
 
 ### How load balancing works (ATS 10.x)
 
@@ -20,19 +25,35 @@ returns all four container IPs for the name `backend`. ATS remaps every inbound
 request to `http://backend:8080/` and its HostDB **strict round-robin** spreads
 requests evenly across those A-records.
 
-> Earlier versions of this PoC used `parent.config` round-robin, but ATS 10
-> removed `proxy.config.http.parent_proxy_routing_enable`, so that mechanism no
-> longer engages. `ats/parent.config` is kept only for reference.
-
 ## Project Files
 
 - `docker-compose.yml`: full multi-container stack
-- `ats/`: ATS configs (`records.yaml`, `remap.config`, `parent.config`, `plugin.config`)
-- `k6/`: smoke/load/failover scripts
+- `Apache_Traffic_Server/`: ATS configs (`records.yaml`, `remap.config`,
+  `plugin.config`, `json-exporter.yml`)
+- `Nginx/`: NGINX config (`nginx.conf`) — used when swapping to NGINX
+- `k6/`: smoke/load/failover scripts (all hit `http://lb:8080/`)
 - `prometheus/prometheus.yml`: scrape jobs
 - `grafana/`: auto-provisioned datasource and dashboard
 - `scripts/distribution-check.ps1`: quick hit-distribution check from host
 - `pom.xml`: Maven dependencies and build
+
+## Swapping load balancers
+
+Only one LB can run at a time (both bind host ports `8088` and `8081`).
+
+In `docker-compose.yml`:
+
+1. Comment out the `ats-lb` **and** `ats-exporter` blocks.
+2. Uncomment the `nginx-lb` (and optionally `nginx-exporter`) blocks.
+
+In `prometheus/prometheus.yml`:
+
+3. Comment out the `ats` scrape job.
+4. Uncomment the `nginx` scrape job (only if you uncommented `nginx-exporter`).
+
+Then `docker compose up -d --force-recreate`. The k6 scripts and
+`distribution-check.ps1` need no changes — they target `http://lb:8080/` /
+`http://localhost:8088/` which both LBs serve.
 
 ## Prerequisites
 
@@ -160,5 +181,5 @@ docker compose exec netshoot sh -c "tcpdump -i any host ats-lb and tcp"
 - The load balancer uses the official `trafficserver/trafficserver` image (ATS 10.x).
   ATS 10 replaced the legacy `records.config` with `records.yaml`, and this image
   reads its config from `/opt/etc/trafficserver`. Both are reflected in
-  `docker-compose.yml` and the `ats/` folder.
+  `docker-compose.yml` and the `Apache_Traffic_Server/` folder.
 
