@@ -129,7 +129,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "rate(ats_http_origin_server_request_document_total_size[1m])",
+          "expr": "rate(ats_http_origin_server_response_document_total_size[1m])",
           "legendFormat": "origin bytes",
           "refId": "A"
         }
